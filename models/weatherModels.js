@@ -118,12 +118,24 @@ module.exports = {
                 temp_max: temp_max, // Arrumar a nomenclatura para camelCase
             }
         });
-        return
+        return console.log('dados enviados para o banco')
+    },
+    updateDb: async function updateDb( city_id, temp, fells_like, temp_min, temp_max ) {
+        await db.query('UPDATE city_weather SET temp = :temp, fells_like = :fells_like, temp_min = :temp_min, temp_max = :temp_max WHERE city_api_id = :city_id;', {
+            replacements: {
+                city_id: city_id, // Arrumar a nomenclatura para camelCase
+                temp: temp, // Arrumar a nomenclatura para camelCase
+                fells_like: fells_like, // Arrumar a nomenclatura para camelCase
+                temp_min: temp_min, // Arrumar a nomenclatura para camelCase
+                temp_max: temp_max, // Arrumar a nomenclatura para camelCase
+            }
+        });
+        return console.log('dados do banco atualizados')
     },
     apiCall: async function apiCall(cityId) {
         let apiUrl = `http://api.openweathermap.org/data/2.5/weather?id=${cityId}&appid=cd9c7dc2c4bc35d56981a3e9fc134f07&lang=pt_br&units=metric`;
         const response = await fetch(apiUrl)
-        const data = await ppp.json();
+        const data = await response.json();
         console.log('fetch response: ', data);
         return data
     },

@@ -1,18 +1,37 @@
 const model = require('../models/weatherModels');
 
-function checkDate(dbDate) {
-    let data = new Date();
-    console.log('data now: ', data.toString());
-    console.log('data banco:', dbDate.toString());
-    dbDate = new Date(dbDate)
-    let comparison = data - dbDate;
+function catchApiDataError(apiData) {
+    if(apiData.cod === 404) {
+        return response.status(500).json({ msg: "Erro, cidade não encontrada" })
+    } else if(apiData.cod !== 200) {
+        return response.status(500).json({ msg: "Erro" })
+    }    
+}
+
+async function checkDate(dbData, id) {
+    let dateNow = new Date();
+    // console.log('data now: ', data.toString());
+    // console.log('data banco:', dbDate.toString());
+    let dbDataCreateAt = dbData.last_update;
+    dbDataCreateAt = new Date(dbDataCreateAt)
+    let comparison = dateNow - dbDataCreateAt;
     comparison /= 60000
-    console.log('comparison: ', comparison);
-    if(comparison >= 20) {
-        const apiGet = model.mockData1;
-        return console.log('Maior que 20min')
+    if(comparison <= 20) {
+        return dbData
+    } else if(comparison >= 20){
+        const apiData = await model.apiCall(id);
+        let insertIntoDbData = await model.insertIntoDb(
+            apiData.id,
+            apiData.name,
+            apiData.main.temp,
+            apiData.main.feels_like,
+            apiData.main.temp_min,
+            apiData.main.temp_max,
+        )
+        return apiData
+
     }
-    comparison = Math.floor(comparison / 60 / 60 / 24)
+    // comparison = Math.floor(comparison / 60 / 60 / 24)
     return data;
 }
 
@@ -20,25 +39,10 @@ module.exports = {
     get: async function(request, response) {
         let id = request.params.id;
         let dbData = await model.getDb(id);
-        console.log('dbData', dbData);
-        if(dbData) {
-            console.log('check time stamp')
+        if(!dbData) {
 
-            checkDate(dbData.create_at);
-
-            // console.log('dbData', dbData)
-            //por uma função para isso?
-            //if (t>20min call api, else return dbData)
-            //dbData[0].dt = new Date(dbData[0].dt * 1000)
-            response.send(`Temperatura em ${dbData.city_name} é de: ${dbData.temp}ºC`);
-
-        } else {
             const apiData = await model.apiCall(id)
-            if(apiData.cod === 404) {
-                return response.status(500).json({ msg: "Erro, cidade não encontrada" })
-            } else if(apiData.cod !== 200) {
-                return response.status(500).json({ msg: "Erro" })
-            }
+            catchApiDataError(apiData)
             let insertIntoDbData = await model.insertIntoDb(
                 apiData.id,
                 apiData.name,
@@ -47,8 +51,46 @@ module.exports = {
                 apiData.main.temp_min,
                 apiData.main.temp_max,
             )
-            response.send(`Temperatura em ${apiData.name} é de: ${apiData.main.temp}ºC`);
+            response.send(`Temperatura em ${apiData.name} é de: ${apiData.main.temp}ºC [CAMINHO E]`);
+            console.log('caminho E')
             return apiData
+
+        } else if(dbData) {
+
+            console.log('check time stamp')
+
+            let dateNow = new Date();
+            // console.log('data now: ', data.toString());
+            // console.log('data banco:', dbDate.toString());
+            let dbDataCreateAt = dbData.last_update;
+            dbDataCreateAt = new Date(dbDataCreateAt)
+            let comparison = dateNow - dbDataCreateAt;
+            comparison /= 60000
+            if(comparison <= 20) {
+                console.log('caminho G')
+                response.send(`Temperatura em ${dbData.city_name} é de: ${dbData.temp}ºC [CAMINHO G]`);
+                return dbData
+            } else if(comparison > 20){
+                const apiData = await model.apiCall(id);
+                let updateDbData = await model.updateDb(
+                    apiData.id,
+                    apiData.main.temp,
+                    apiData.main.feels_like,
+                    apiData.main.temp_min,
+                    apiData.main.temp_max
+                )
+                console.log('caminho H')
+                response.send(`Temperatura em ${apiData.name} é de: ${apiData.main.temp}ºC [CAMINHO H]`);
+                return apiData
+        
+            }
+            // comparison = Math.floor(comparison / 60 / 60 / 24)
+            return data;
+
+
+            // checkDate(dbData, id);
+            // response.send(`Temperatura em ${dbData.city_name} é de: ${dbData.temp}ºC`);
+            // return dbData
         }
         console.log('ok')
     },
