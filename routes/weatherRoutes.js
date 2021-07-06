@@ -5,6 +5,4 @@ const controller = require('../controller/weatherController');
 
 router.get('/tempo/:id', controller.get)
 
-router.get('/teste', controller.teste)
-
 module.exports = router;
