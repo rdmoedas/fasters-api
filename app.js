@@ -1,10 +1,14 @@
-const express = require('express')
+const express = require('express');
+const cors = require('cors');
+
+const weatherRoutes = require('./routes/weatherRoutes');
+
 const app = express();
 const port = 3000;
 
-app.get('/', (req, res) => {
-    res.send('Hello World!')
-})
+app.use(cors());
+
+app.use('/', weatherRoutes);
 
 app.listen(port, () => {
     console.log(`Listening at http://localhost:${port}`)
