@@ -5,19 +5,7 @@ const db = new Sequelize(configDatabase);
 const apiUrl = require('../config/openWeatherApi');
 
 module.exports = {
-    getDb: async function getDb(id) {
-        const response = await db.query(
-            'SELECT * FROM city_weather WHERE city_api_id = :id;',
-            {
-                type: Sequelize.QueryTypes.SELECT,
-                replacements: {
-                    id: id
-                }
-            }
-        );
-        return response[0];
-    },
-    
+
     insertIntoDb: async function insertIntoDb( cityId, cityName, temp, feelsLike) {
         await db.query(
             'INSERT INTO city_weather (city_api_id, city_name, temp, feels_like) VALUES (:cityId, :cityName, :temp, :feelsLike);',
@@ -33,9 +21,22 @@ module.exports = {
         return
     },
 
+    getDb: async function getDb(id) {
+        const response = await db.query(
+            'SELECT * FROM city_weather WHERE city_api_id = :id;',
+            {
+                type: Sequelize.QueryTypes.SELECT,
+                replacements: {
+                    id: id
+                }
+            }
+        );
+        return response[0];
+    },
+
     updateDb: async function updateDb( cityId, temp, feelsLike ) {
         await db.query(
-            'UPDATE city_weather SET temp = :temp, fells_like = :feelsLike WHERE city_api_id = :cityId;', 
+            'UPDATE city_weather SET temp = :temp, feels_like = :feelsLike WHERE city_api_id = :cityId;', 
             {
                 replacements: {
                     cityId: cityId,
@@ -45,6 +46,17 @@ module.exports = {
             }
         );
         return
+    },
+
+    deleteFromDb: async function deleteFromDb( cityId ) {
+        await db.query(
+            'DELETE FROM `city_weather` WHERE city_api_id = :cityId;', 
+            {
+                replacements: {
+                    cityId: cityId
+                }
+            }
+        )
     },
 
     apiCall: async function apiCall(cityId) {
